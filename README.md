@@ -1,41 +1,61 @@
 # ChatCapsule
 
-ChatCapsule turns a ChatGPT shared-conversation link into a compact Markdown and JSON context capsule. It uses deterministic heuristics only—no AI APIs, accounts, database, analytics, or permanent storage.
+**Turn a long ChatGPT conversation into portable context.**
 
-## Features
+[Open ChatCapsule](https://chatcapsule.onrender.com/) to paste a public shared-conversation link and generate a concise capsule you can reuse in another conversation or tool.
 
-- Safe allowlisted fetching of ChatGPT share URLs
-- Best-effort HTML extractor with Markdown/code/link preservation and a separate turbo-stream decoder
-- Rule-based requirements, decisions, constraints, questions, code and link extraction
-- Copy plus Markdown and JSON downloads
+## What it does
 
-## Fetching and compatibility
-
-The extractor first requests the public share page with HTTPX. As a temporary compatibility fallback, if the returned HTML cannot be parsed, it uses the `curl` executable available on the host (`curl.exe` on Windows). This fallback is optional, is limited to the validated ChatGPT share URL, and has request and response-size limits. Install curl if your environment does not provide it; without curl, the app still works whenever HTTPX receives a parseable page. The fallback is OS-dependent and may be replaced with a supported browser-compatible fetch strategy in a future version.
-
-Upstream timeouts return HTTP 504. Access blocks, unavailable pages, and page-format parsing failures return distinct messages with HTTP 502; malformed or unsupported share URLs return HTTP 400.
+- Extracts messages from public ChatGPT shared links, including legacy `chat.openai.com` links.
+- Builds a structured context capsule with requirements, decisions, constraints, facts, open questions, next steps, code blocks, links, and detected topics.
+- Preserves useful Markdown, links, and code when extracting conversation content.
+- Lets you copy the capsule or download it as Markdown or JSON.
+- Uses deterministic, rule-based processing; it does not call an AI API to summarize conversations.
 
 ## Run locally
 
-Requires Python 3.11+.
+Requires Python 3.11 or newer.
 
-```bash
+```powershell
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Open `http://127.0.0.1:8000`, paste a `https://chatgpt.com/share/...` or legacy `https://chat.openai.com/share/...` URL, and generate a capsule. Run tests with `pytest`.
+On macOS or Linux, activate the virtual environment with `source .venv/bin/activate` instead. Open [http://127.0.0.1:8000](http://127.0.0.1:8000) and paste a public ChatGPT shared link.
+
+Run the test suite with:
+
+```bash
+pytest
+```
 
 ## API
 
-`GET /health` returns `{"status":"ok"}`. `POST /api/capsule` accepts `{"url":"https://chatgpt.com/share/..."}` and returns normalized conversation data, JSON capsule, Markdown and statistics.
+`GET /health` returns `{"status":"ok"}` when the app is running.
 
-## Architecture and privacy
+`POST /api/capsule` accepts a JSON body containing a public ChatGPT share URL:
 
-`app/extractors/chatgpt.py` owns fetching, URL validation, and HTML parsing. `app/extractors/turbo.py` decodes the page's embedded turbo-stream payload. `processor.py` uses transparent rule-based heuristics; `capsule.py` renders output. Requests are processed only in memory and content is not logged or stored by the application.
+```json
+{
+  "url": "https://chatgpt.com/share/your-share-id"
+}
+```
 
-## Limitations and future work
+The response contains the extracted `conversation`, structured `capsule`, rendered `markdown`, and `statistics` such as message counts and capsule length. Invalid or unsupported URLs return HTTP 400. Upstream access, availability, or parsing failures return HTTP 502; timeouts return HTTP 504.
 
-ChatGPT shared-page HTML can change over time. The extractor and turbo-stream decoder are isolated from the rest of the application and may require updates if the platform changes its page structure. The curl fallback is temporary and host-dependent. The MVP deliberately omits accounts, databases, browser extensions, cloud deployment and semantic AI summarization. Additional providers can be introduced by implementing another extractor.
+## Privacy and compatibility
+
+ChatCapsule does not require an account and does not persist conversation content in an application database. The server fetches the shared page to process it, so use only links you are comfortable sending to the service and its hosting provider. Shared links must be public and accessible without signing in.
+
+The extractor uses HTTPX first. If the returned page cannot be parsed, it can use the host's `curl` executable as a temporary compatibility fallback; this fallback is optional. Fetches are limited to validated ChatGPT share URLs and responses are size-limited. ChatGPT may block automated requests, remove a shared page, or change its page format, so extraction is best-effort.
+
+## Project structure
+
+- `app/extractors/chatgpt.py` validates share URLs, fetches pages, and extracts conversation content.
+- `app/extractors/turbo.py` decodes the embedded turbo-stream payload.
+- `app/processor.py` applies transparent, rule-based heuristics to build structured context.
+- `app/capsule.py` renders Markdown and calculates statistics.
+- `app/templates/` and `app/static/` provide the web interface.
+- `tests/` contains the API, extractor, and processor tests.
