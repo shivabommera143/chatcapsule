@@ -1,0 +1,1 @@
+"""ChatCapsule application package."""

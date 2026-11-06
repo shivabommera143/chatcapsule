@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f6fb">
+    <title>ChatCapsule — Conversation context, made portable</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main>
+        <header class="hero">
+            <div class="brand-mark" aria-hidden="true">CC</div>
+            <p class="eyebrow">A better way to pick up where you left off</p>
+            <h1>Make every conversation <span>portable.</span></h1>
+            <p class="hero-copy">
+                Turn a long ChatGPT conversation into a concise, reusable context capsule.
+            </p>
+        </header>
+
+        <section class="card input-card" aria-labelledby="input-heading">
+            <div class="section-heading">
+                <span class="step-number" aria-hidden="true">01</span>
+                <div>
+                    <p class="eyebrow">Start with a shared link</p>
+                    <h2 id="input-heading">Bring your conversation</h2>
+                </div>
+            </div>
+            <label for="url">ChatGPT shared conversation URL</label>
+            <textarea id="url" rows="2" placeholder="https://chatgpt.com/share/..." aria-describedby="url-help"></textarea>
+            <p id="url-help" class="field-help">Your share link must be public and accessible without signing in.</p>
+            <button id="generate" class="primary-button" type="button">Generate capsule</button>
+            <p class="privacy"><span aria-hidden="true">●</span> Processed temporarily. Your conversation is not stored.</p>
+            <p id="status" role="status" aria-live="polite"></p>
+        </section>
+
+        <section id="result" class="card result-card hidden" aria-labelledby="title">
+            <div class="section-heading">
+                <span class="step-number" aria-hidden="true">02</span>
+                <div>
+                    <p class="eyebrow">Ready to reuse</p>
+                    <h2 id="title"></h2>
+                </div>
+            </div>
+            <div id="stats" aria-label="Conversation statistics"></div>
+            <label class="sr-only" for="capsule">Generated context capsule</label>
+            <textarea id="capsule" readonly aria-label="Generated context capsule"></textarea>
+            <div class="actions">
+                <button id="copy" type="button">Copy capsule</button>
+                <button id="md" type="button">Download Markdown</button>
+                <button id="json" type="button">Download JSON</button>
+                <a id="original" target="_blank" rel="noopener noreferrer">Open original</a>
+            </div>
+        </section>
+        <footer>ChatCapsule <span aria-hidden="true">·</span> Private by design, useful by default.</footer>
+    </main>
+    <script src="/static/app.js"></script>
+</body>
+</html>
